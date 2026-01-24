@@ -1,9 +1,8 @@
 export default function FilterToggle({ filter, onFilterChange, viewFilter, onViewFilterChange }) {
   // Combined filter: status filters + special views
   const filters = [
-    { key: 'all', label: 'All', isView: false },
-    { key: 'sold', label: 'Sold', isView: false },
     { key: 'active', label: 'Active', isView: false },
+    { key: 'sold', label: 'Sold', isView: false },
     { key: 'favorites', label: 'Favorites', isView: true },
     { key: 'removed', label: 'Removed', isView: true }
   ]

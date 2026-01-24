@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, ExternalLink, Clock, LayoutGrid, Heart, Trash2, RotateCcw } from 'lucide-react'
+import { MapPin, ExternalLink, Clock, LayoutGrid, Heart, Trash2, RotateCcw, Calendar, RefreshCw } from 'lucide-react'
 import ImageGallery from './ImageGallery'
 import Lightbox from './Lightbox'
 import SoldBadge from './SoldBadge'
@@ -36,6 +36,41 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
     }).format(price)
   }
 
+  const formatDate = (dateValue) => {
+    if (!dateValue) return null
+    try {
+      // Handle Unix timestamp (seconds)
+      const date = typeof dateValue === 'number' && dateValue > 1e9
+        ? new Date(dateValue * 1000)
+        : new Date(dateValue)
+      if (isNaN(date.getTime())) return null
+      return date.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })
+    } catch {
+      return null
+    }
+  }
+
+  const getDaysAgo = (dateValue) => {
+    if (!dateValue) return null
+    try {
+      const date = typeof dateValue === 'number' && dateValue > 1e9
+        ? new Date(dateValue * 1000)
+        : new Date(dateValue)
+      if (isNaN(date.getTime())) return null
+      const now = new Date()
+      const diffMs = now - date
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
+      return diffDays
+    } catch {
+      return null
+    }
+  }
+
+  const createdDate = formatDate(listing.created_at)
+  const createdDaysAgo = getDaysAgo(listing.created_at)
+  const updatedDaysAgo = getDaysAgo(listing.updated_at || listing.last_update)
+  const isNew = createdDaysAgo !== null && createdDaysAgo <= 7
+
   return (
     <>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
@@ -54,6 +89,11 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
             <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
               {listing.portal}
             </span>
+            {isNew && (
+              <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
+                NEW
+              </span>
+            )}
             {listing.is_sold && listing.days_live && (
               <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
                 <Clock className="w-3 h-3" />
@@ -105,19 +145,43 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
 
         {/* Content */}
         <div className="p-4">
-          {/* Title - links to detail page */}
-          <Link
-            to={`/listing/${listing.id}`}
-            className="font-bold text-lg mb-2 line-clamp-2 hover:text-blue-600 block"
-          >
-            {listing.title}
-          </Link>
+          {/* Title - links to original URL if active, or detail page if sold */}
+          {listing.is_sold ? (
+            <Link
+              to={`/listing/${listing.id}`}
+              className="font-bold text-lg mb-2 line-clamp-2 hover:text-blue-600 block"
+            >
+              {listing.title}
+            </Link>
+          ) : (
+            <a
+              href={listing.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-lg mb-2 line-clamp-2 hover:text-blue-600 block"
+            >
+              {listing.title}
+            </a>
+          )}
 
           {/* Location */}
           {listing.location && (
             <div className="flex items-center text-gray-600 text-sm mb-2">
               <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
               <span className="truncate">{listing.location}</span>
+            </div>
+          )}
+
+          {/* Date info */}
+          {createdDate && (
+            <div className="flex items-center gap-1 text-gray-500 text-xs mb-2">
+              <Calendar className="w-3 h-3" />
+              {createdDate}
+              {createdDaysAgo !== null && (
+                <span className="text-gray-400">
+                  ({createdDaysAgo === 0 ? 'Today' : createdDaysAgo === 1 ? 'Yesterday' : `${createdDaysAgo} days ago`})
+                </span>
+              )}
             </div>
           )}
 
@@ -133,16 +197,14 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            {!listing.is_sold && (
-              <a
-                href={listing.url}
-                target="_blank"
-                rel="noopener noreferrer"
+            {listing.is_sold && (
+              <Link
+                to={`/listing/${listing.id}`}
                 className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
               >
-                View on {listing.portal}
+                View details
                 <ExternalLink className="w-3 h-3" />
-              </a>
+              </Link>
             )}
             {floorPlans.length > 0 && (
               <button

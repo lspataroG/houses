@@ -10,7 +10,7 @@ export default function ListingsPage() {
   const [userState, setUserState] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [filter, setFilter] = useState('all') // 'all', 'active', 'sold'
+  const [filter, setFilter] = useState('active') // 'all', 'active', 'sold'
   const [viewFilter, setViewFilter] = useState('main') // 'main', 'favorites', 'removed'
   const [activeListingId, setActiveListingId] = useState(null)
   const listingRefs = useRef({})
