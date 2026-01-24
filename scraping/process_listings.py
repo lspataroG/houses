@@ -256,13 +256,13 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     return R * c
 
 
-def find_duplicates(df, distance_threshold=100, price_tolerance=0.05):
+def find_duplicates(df, distance_threshold=100):
     """
     Find duplicate listings across different portals.
 
     A duplicate is identified when:
     - Distance between coordinates is within threshold (default 100m)
-    - Price difference is within tolerance (default 5%)
+    - Price is exactly the same
 
     Each Idealista listing is matched to at most one Immobiliare listing
     (the closest one if multiple matches exist).
@@ -270,7 +270,6 @@ def find_duplicates(df, distance_threshold=100, price_tolerance=0.05):
     Args:
         df: DataFrame with listings from multiple portals
         distance_threshold: Maximum distance in meters to consider a duplicate
-        price_tolerance: Maximum relative price difference (0.05 = 5%)
 
     Returns:
         List of tuples (immobiliare_idx, idealista_idx) of duplicate pairs
@@ -280,7 +279,7 @@ def find_duplicates(df, distance_threshold=100, price_tolerance=0.05):
     ideal_df = df[df['portal'] == 'idealista'].copy()
 
     # For each Idealista listing, find the best matching Immobiliare listing
-    # Best = closest distance with matching price
+    # Best = closest distance with exact same price
     ideal_to_immo = {}  # ideal_idx -> (immo_idx, distance)
 
     for ideal_idx, ideal_row in ideal_df.iterrows():
@@ -304,6 +303,10 @@ def find_duplicates(df, distance_threshold=100, price_tolerance=0.05):
             if pd.isna(immo_price) or immo_price == 0:
                 continue
 
+            # Check exact price match
+            if immo_price != ideal_price:
+                continue
+
             # Check distance
             distance = haversine_distance(
                 immo_row['latitude'], immo_row['longitude'],
@@ -311,11 +314,6 @@ def find_duplicates(df, distance_threshold=100, price_tolerance=0.05):
             )
 
             if distance > distance_threshold:
-                continue
-
-            # Check price similarity
-            price_diff = abs(immo_price - ideal_price) / max(immo_price, ideal_price)
-            if price_diff > price_tolerance:
                 continue
 
             # Found a potential match - keep the closest one
@@ -408,14 +406,13 @@ def merge_listing_data(primary_row, secondary_row):
     return merged
 
 
-def deduplicate_listings(df, distance_threshold=100, price_tolerance=0.05):
+def deduplicate_listings(df, distance_threshold=100):
     """
     Remove duplicate listings across portals, keeping Immobiliare and merging Idealista data.
 
     Args:
         df: DataFrame with listings from multiple portals
         distance_threshold: Maximum distance in meters to consider a duplicate
-        price_tolerance: Maximum relative price difference (0.05 = 5%)
 
     Returns:
         DataFrame with duplicates removed and data merged
@@ -423,8 +420,8 @@ def deduplicate_listings(df, distance_threshold=100, price_tolerance=0.05):
     if df.empty:
         return df
 
-    # Find duplicates
-    duplicates = find_duplicates(df, distance_threshold, price_tolerance)
+    # Find duplicates (requires exact price match)
+    duplicates = find_duplicates(df, distance_threshold)
 
     if not duplicates:
         return df
