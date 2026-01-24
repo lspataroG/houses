@@ -256,14 +256,14 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     return R * c
 
 
-def find_duplicates(df, distance_threshold=100, surface_tolerance=5):
+def find_duplicates(df, distance_threshold=100):
     """
     Find duplicate listings across different portals.
 
     A duplicate is identified when:
     - Distance between coordinates is within threshold (default 100m)
     - Price is exactly the same
-    - Surface area is within tolerance (default 5 sqm)
+    - Surface area is exactly the same
 
     Each Idealista listing is matched to at most one Immobiliare listing
     (the closest one if multiple matches exist).
@@ -271,7 +271,6 @@ def find_duplicates(df, distance_threshold=100, surface_tolerance=5):
     Args:
         df: DataFrame with listings from multiple portals
         distance_threshold: Maximum distance in meters to consider a duplicate
-        surface_tolerance: Maximum surface difference in sqm (default 5)
 
     Returns:
         List of tuples (immobiliare_idx, idealista_idx) of duplicate pairs
@@ -281,7 +280,7 @@ def find_duplicates(df, distance_threshold=100, surface_tolerance=5):
     ideal_df = df[df['portal'] == 'idealista'].copy()
 
     # For each Idealista listing, find the best matching Immobiliare listing
-    # Best = closest distance with exact same price and similar surface
+    # Best = closest distance with exact same price and surface
     ideal_to_immo = {}  # ideal_idx -> (immo_idx, distance)
 
     for ideal_idx, ideal_row in ideal_df.iterrows():
@@ -311,10 +310,10 @@ def find_duplicates(df, distance_threshold=100, surface_tolerance=5):
             if immo_price != ideal_price:
                 continue
 
-            # Check surface similarity (if both have surface data)
+            # Check exact surface match (if both have surface data)
             immo_surface = immo_row.get('surface_numeric')
             if pd.notna(ideal_surface) and pd.notna(immo_surface):
-                if abs(immo_surface - ideal_surface) > surface_tolerance:
+                if immo_surface != ideal_surface:
                     continue
 
             # Check distance
