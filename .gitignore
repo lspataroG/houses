@@ -1,0 +1,50 @@
+# Database (deprecated - using parquet now)
+*.db
+*.db-journal
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+
+# UV
+.uv/
+
+# Storage (raw scraped data)
+src/backend/storage/*
+!src/backend/storage/.gitkeep
+
+# Data (processed parquet files)
+data/
+*.parquet
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Analysis outputs
+*.xlsx
+analysis_results_*.xlsx
+
+# Node
+node_modules/
+dist/
+.vite/
+*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
