@@ -256,13 +256,14 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     return R * c
 
 
-def find_duplicates(df, distance_threshold=100):
+def find_duplicates(df, distance_threshold=100, surface_tolerance=5):
     """
     Find duplicate listings across different portals.
 
     A duplicate is identified when:
     - Distance between coordinates is within threshold (default 100m)
     - Price is exactly the same
+    - Surface area is within tolerance (default 5 sqm)
 
     Each Idealista listing is matched to at most one Immobiliare listing
     (the closest one if multiple matches exist).
@@ -270,6 +271,7 @@ def find_duplicates(df, distance_threshold=100):
     Args:
         df: DataFrame with listings from multiple portals
         distance_threshold: Maximum distance in meters to consider a duplicate
+        surface_tolerance: Maximum surface difference in sqm (default 5)
 
     Returns:
         List of tuples (immobiliare_idx, idealista_idx) of duplicate pairs
@@ -279,7 +281,7 @@ def find_duplicates(df, distance_threshold=100):
     ideal_df = df[df['portal'] == 'idealista'].copy()
 
     # For each Idealista listing, find the best matching Immobiliare listing
-    # Best = closest distance with exact same price
+    # Best = closest distance with exact same price and similar surface
     ideal_to_immo = {}  # ideal_idx -> (immo_idx, distance)
 
     for ideal_idx, ideal_row in ideal_df.iterrows():
@@ -290,6 +292,8 @@ def find_duplicates(df, distance_threshold=100):
         ideal_price = ideal_row.get('price')
         if pd.isna(ideal_price) or ideal_price == 0:
             continue
+
+        ideal_surface = ideal_row.get('surface_numeric')
 
         best_match = None
         best_distance = float('inf')
@@ -306,6 +310,12 @@ def find_duplicates(df, distance_threshold=100):
             # Check exact price match
             if immo_price != ideal_price:
                 continue
+
+            # Check surface similarity (if both have surface data)
+            immo_surface = immo_row.get('surface_numeric')
+            if pd.notna(ideal_surface) and pd.notna(immo_surface):
+                if abs(immo_surface - ideal_surface) > surface_tolerance:
+                    continue
 
             # Check distance
             distance = haversine_distance(
