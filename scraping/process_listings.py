@@ -372,6 +372,25 @@ def merge_listing_data(primary_row, secondary_row):
         'floor_plan_indices'
     ]
 
+    def is_empty(val):
+        """Check if a value is empty/null."""
+        if val is None:
+            return True
+        if isinstance(val, (list, np.ndarray)):
+            return len(val) == 0
+        try:
+            if pd.isna(val):
+                return True
+        except (ValueError, TypeError):
+            pass
+        if val == '' or val == 'N/A':
+            return True
+        return False
+
+    def has_value(val):
+        """Check if a value is non-empty."""
+        return not is_empty(val)
+
     for field in merge_fields:
         if field not in merged.index:
             continue
@@ -379,23 +398,7 @@ def merge_listing_data(primary_row, secondary_row):
         primary_val = merged.get(field)
         secondary_val = secondary_row.get(field)
 
-        # Check if primary is empty/null
-        is_primary_empty = (
-            pd.isna(primary_val) or
-            primary_val == '' or
-            primary_val == 'N/A' or
-            (isinstance(primary_val, (list, np.ndarray)) and len(primary_val) == 0)
-        )
-
-        # Check if secondary has value
-        has_secondary_value = (
-            pd.notna(secondary_val) and
-            secondary_val != '' and
-            secondary_val != 'N/A' and
-            not (isinstance(secondary_val, (list, np.ndarray)) and len(secondary_val) == 0)
-        )
-
-        if is_primary_empty and has_secondary_value:
+        if is_empty(primary_val) and has_value(secondary_val):
             merged[field] = secondary_val
 
     # Merge image info - keep higher image count
@@ -407,7 +410,9 @@ def merge_listing_data(primary_row, secondary_row):
     # Merge floor plans if secondary has them and primary doesn't
     primary_plans = merged.get('floor_plan_indices', [])
     secondary_plans = secondary_row.get('floor_plan_indices', [])
-    if (not primary_plans or len(primary_plans) == 0) and secondary_plans and len(secondary_plans) > 0:
+    primary_has_plans = primary_plans is not None and (isinstance(primary_plans, (list, np.ndarray)) and len(primary_plans) > 0)
+    secondary_has_plans = secondary_plans is not None and (isinstance(secondary_plans, (list, np.ndarray)) and len(secondary_plans) > 0)
+    if not primary_has_plans and secondary_has_plans:
         merged['floor_plan_indices'] = secondary_plans
         # Note: floor plans from secondary need the secondary folder path
         merged['floor_plan_folder'] = secondary_row.get('folder_path', '')
