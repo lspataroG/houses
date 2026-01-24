@@ -20,8 +20,10 @@ ENV/
 src/backend/storage/*
 !src/backend/storage/.gitkeep
 
-# Data (processed parquet files)
-data/
+# Data (processed parquet files and scraped data)
+data/scraped/
+data/processed/
+data/sold/
 *.parquet
 
 # Jupyter
