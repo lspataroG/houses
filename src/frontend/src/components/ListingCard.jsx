@@ -71,6 +71,9 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
   const updatedDaysAgo = getDaysAgo(listing.updated_at || listing.last_update)
   const isNew = createdDaysAgo !== null && createdDaysAgo <= 7
 
+  // Get AI summary (now a flat column)
+  const summary = listing.ai_summary
+
   return (
     <>
       <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
@@ -92,6 +95,15 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
             {isNew && (
               <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
                 NEW
+              </span>
+            )}
+            {listing.beauty_score && (
+              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                listing.beauty_score >= 4 ? 'bg-emerald-500 text-white' :
+                listing.beauty_score === 3 ? 'bg-yellow-500 text-white' :
+                'bg-red-500 text-white'
+              }`} title={listing.beauty_notes || `Beauty score: ${listing.beauty_score}/5`}>
+                {'★'.repeat(listing.beauty_score)}
               </span>
             )}
             {listing.is_sold && listing.days_live && (
@@ -149,7 +161,7 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
           {listing.is_sold ? (
             <Link
               to={`/listing/${listing.id}`}
-              className="font-bold text-lg mb-2 line-clamp-2 hover:text-blue-600 block"
+              className="font-bold text-lg mb-1 line-clamp-2 hover:text-blue-600 block"
             >
               {listing.title}
             </Link>
@@ -158,10 +170,33 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
               href={listing.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-bold text-lg mb-2 line-clamp-2 hover:text-blue-600 block"
+              className="font-bold text-lg mb-1 line-clamp-2 hover:text-blue-600 block"
             >
               {listing.title}
             </a>
+          )}
+
+          {/* AI Summary */}
+          {summary && (
+            <p className="text-sm text-gray-600 mb-2">
+              {summary}
+            </p>
+          )}
+
+          {/* Beauty Assessment */}
+          {listing.beauty_score && (
+            <div className="text-sm mb-2 flex items-start gap-2">
+              <span className={`flex-shrink-0 ${
+                listing.beauty_score >= 4 ? 'text-emerald-500' :
+                listing.beauty_score === 3 ? 'text-yellow-500' :
+                'text-red-500'
+              }`}>
+                {'★'.repeat(listing.beauty_score)}{'☆'.repeat(5 - listing.beauty_score)}
+              </span>
+              {listing.beauty_notes && (
+                <span className="text-gray-500">{listing.beauty_notes}</span>
+              )}
+            </div>
           )}
 
           {/* Location */}
