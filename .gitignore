@@ -1,3 +1,6 @@
+# Config (contains API keys)
+config.yaml
+
 # Database (deprecated - using parquet now)
 *.db
 *.db-journal

@@ -67,8 +67,26 @@ def extract_urls_from_immobiliare_search(html_content):
             else:
                 url = href
 
-            # Get price from lookup if available
+            # Get price from JSON lookup if available
             price = price_lookup.get(listing_id)
+
+            # If not in JSON, try to extract from HTML
+            if price is None:
+                # Find the listing card by ID
+                listing_card = soup.find('li', id=listing_id)
+                if listing_card:
+                    # Look for price div
+                    price_div = listing_card.find('div', class_=re.compile(r'Price', re.I))
+                    if price_div:
+                        price_text = price_div.get_text(strip=True)
+                        # Parse price: "€ 700.000" -> 700000
+                        price_match = re.search(r'€\s*([\d.]+)', price_text)
+                        if price_match:
+                            try:
+                                # Remove dots (thousands separator) and convert to int
+                                price = int(price_match.group(1).replace('.', ''))
+                            except ValueError:
+                                pass
 
             results.append({
                 'url': url,

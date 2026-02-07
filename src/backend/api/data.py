@@ -63,6 +63,9 @@ def get_all_listings(include_sold: bool = True, sold_only: bool = False) -> list
     df = load_listings_df()
     if sold_only:
         df = df[df["is_sold"] == True]
+        # Sort sold listings by date_sold descending (most recently sold first)
+        if "date_sold" in df.columns:
+            df = df.sort_values("date_sold", ascending=False, na_position="last")
     elif not include_sold:
         df = df[df["is_sold"] == False]
 

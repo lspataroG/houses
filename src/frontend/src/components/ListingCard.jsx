@@ -85,7 +85,7 @@ export default function ListingCard({ listing, isFavorite, isRemoved, onToggleFa
           />
 
           {/* Sold overlay */}
-          {listing.is_sold && <SoldBadge />}
+          {listing.is_sold && <SoldBadge dateSold={listing.date_sold} />}
 
           {/* Portal badge */}
           <div className="absolute top-2 left-2 flex gap-1">
