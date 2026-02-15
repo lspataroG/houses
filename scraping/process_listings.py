@@ -256,7 +256,7 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     return R * c
 
 
-def find_duplicates(df, distance_threshold=100):
+def find_duplicates(df, distance_threshold=150):
     """
     Find duplicate listings across different portals.
 
@@ -420,7 +420,7 @@ def merge_listing_data(primary_row, secondary_row):
     return merged
 
 
-def deduplicate_listings(df, distance_threshold=100):
+def deduplicate_listings(df, distance_threshold=150):
     """
     Remove duplicate listings across portals, keeping Immobiliare and merging Idealista data.
 

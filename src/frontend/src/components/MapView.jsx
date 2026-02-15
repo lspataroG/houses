@@ -7,10 +7,18 @@ import { MapPin, ExternalLink } from 'lucide-react'
 import { getImageUrls } from '../api/listings'
 import FeatureIcons from './FeatureIcons'
 
+// Get pin color based on beauty score
+const getRatingColor = (beautyScore) => {
+  if (beautyScore >= 4) return '#16a34a' // green-600
+  if (beautyScore === 3) return '#f97316' // orange-500
+  if (beautyScore >= 1) return '#dc2626' // red-600
+  return '#6b7280' // gray-500 (no score)
+}
+
 // Create custom marker icons
-const createIcon = (isActive) => {
+const createIcon = (isActive, beautyScore) => {
   const size = isActive ? 35 : 25
-  const color = isActive ? '#2563eb' : '#6b7280' // blue-600 : gray-500
+  const color = isActive ? '#2563eb' : getRatingColor(beautyScore)
 
   return L.divIcon({
     className: 'custom-marker',
@@ -109,7 +117,7 @@ export default function MapView({ listings, activeListingId, onMarkerClick }) {
             <Marker
               key={listing.id}
               position={[listing.latitude, listing.longitude]}
-              icon={createIcon(isActive)}
+              icon={createIcon(isActive, listing.beauty_score)}
               zIndexOffset={isActive ? 1000 : 0}
               eventHandlers={{
                 click: () => onMarkerClick && onMarkerClick(listing.id)

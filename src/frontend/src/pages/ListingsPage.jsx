@@ -140,15 +140,6 @@ export default function ListingsPage() {
     return () => observer.disconnect()
   }, [filteredListings])
 
-  // Scroll to listing when clicking on map marker
-  const scrollToListing = useCallback((listingId) => {
-    const element = listingRefs.current[listingId]
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      setActiveListingId(listingId)
-    }
-  }, [])
-
   // Handle hover on listing card
   const handleListingHover = useCallback((listingId) => {
     setActiveListingId(listingId)
@@ -233,7 +224,7 @@ export default function ListingsPage() {
             <MapView
               listings={filteredListings}
               activeListingId={activeListingId}
-              onMarkerClick={scrollToListing}
+              onMarkerClick={null}
             />
           )}
         </div>
